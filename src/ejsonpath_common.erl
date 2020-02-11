@@ -19,6 +19,7 @@
     index/2,
 
     script_eval/3,
+    identity/1,
     to_boolean/1
 ]).
 
