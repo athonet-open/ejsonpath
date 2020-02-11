@@ -1,9 +1,11 @@
 _build/
 deps/
 ebin/
+.idea/
 .eunit/
 *.beam
 erl_crash.dump
 .dialyzer_plt
+ejsonpath.iml
 src/ejsonpath_parse.erl
 src/ejsonpath_scan.erl
