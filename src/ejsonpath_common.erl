@@ -10,6 +10,7 @@
     buildpath/2,
     argument/2,
     argument/3,
+    keyaccess/1,
     unzip/1,
     type/1,
 
@@ -38,6 +39,12 @@ argument(Node, ParentPath, Key) ->
         node = Node,
         path = ejsonpath_common:buildpath(Key, ParentPath)
     }.
+
+keyaccess(Options) ->
+    case proplists:get_value(keyaccess, Options, fun ?MODULE:identity/1) of
+        KeyAccess when is_function(KeyAccess, 1) -> KeyAccess;
+        _ -> erlang:error(badfun)
+    end.
 
 unzip(L) when is_list(L) -> 
     unzip_i(L, {[], []}).
@@ -147,6 +154,8 @@ op_eval({op, {root, _} = SubQuery}, _, #{eval_root := EvalRoot}) ->
     Nodes;
 op_eval(Script, Node, Ctx) ->
     script_eval(Script, Node, Ctx).
+
+identity(X) -> X.
 
 to_boolean(false) -> false;
 to_boolean(<<>>) -> false;

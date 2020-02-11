@@ -135,8 +135,10 @@ transform_step(_Pr, _A, _) ->
     ?EJSONPATH_LOG({not_implemented, _Pr, _A}),
     erlang:error(not_implemented).
 
-apply_transform(Keys, #argument{type = hash, node = Acc0, path = Path} = Arg, Func, Ctx, HaveOngoingQuery) ->
-    lists:foldl(fun (Key, {Acc, Paths}) -> 
+apply_transform(Keys, #argument{type = hash, node = Acc0, path = Path} = Arg, Func, #{opts := Options} = Ctx, HaveOngoingQuery) ->
+    KeyAccess = ejsonpath_common:keyaccess(Options),
+    lists:foldl(fun (RawKey, {Acc, Paths}) ->
+        Key = KeyAccess(RawKey),
         case maps:get(Key, Acc, '$undefined') of
             '$undefined' -> 
                 case HaveOngoingQuery of

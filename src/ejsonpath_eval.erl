@@ -52,7 +52,7 @@ apply_eval({key, '*'}, #argument{type = array, node = Node} = Arg, Ctx) ->
     ?EJSONPATH_LOG({key, array, '*'}),
     Idxs = lists:seq(0, erlang:length(Node)-1),
     apply_eval({access_list, Idxs}, Arg, Ctx);
-apply_eval({key, Key}, #argument{type = array, node = Node} = Arg, Ctx) when is_integer(Key) ->
+apply_eval({key, Key}, #argument{type = array} = Arg, Ctx) when is_integer(Key) ->
     ?EJSONPATH_LOG({key, array, Key}),
     apply_eval({access_list, [Key]}, Arg, Ctx);
 apply_eval({key, Key}, #argument{type = hash} = Arg, Ctx) when is_integer(Key) -> 
@@ -72,10 +72,11 @@ apply_eval({access_list, Idxs}, #argument{type = array, node = Node, path = Path
             {ok, Idx} -> [argument(lists:nth(Idx, Node), Path, Idx-1)|Acc]
         end
     end, [], Idxs));
-apply_eval({access_list, Keys}, #argument{type = hash, node = Node, path = Path}, _) ->
+apply_eval({access_list, Keys}, #argument{type = hash, node = Node, path = Path}, #{opts := Options}) ->
     ?EJSONPATH_LOG({access_list, hash, Keys, Path}),
-    lists:reverse(lists:foldl(fun (Key, Acc) -> 
-        case maps:get(Key, Node, '$undefined') of
+    KeyAccess = ejsonpath_common:keyaccess(Options),
+    lists:reverse(lists:foldl(fun (Key, Acc) ->
+        case maps:get(KeyAccess(Key), Node, '$undefined') of
             '$undefined' -> Acc;
             Child -> [argument(Child, Path, Key)|Acc]
         end

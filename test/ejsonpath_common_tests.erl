@@ -81,3 +81,14 @@ slice_seq_test() ->
     ?assertEqual([0,1,2], ejsonpath_common:slice_seq(0, 10, 1, 3)),
 
     ok.
+
+keyaccess_fun_test() ->
+    ?assertError(badfun, ejsonpath_common:keyaccess([keyaccess])),
+    ?assertError(badfun, ejsonpath_common:keyaccess([{keyaccess, 0}])),
+    ?assertError(badfun, ejsonpath_common:keyaccess([{keyaccess, fun(_, _) -> ok end}])),
+
+    KeyAccess = fun (X) -> erlang:binary_to_existing_atom(X, utf8) end,
+    ?assertEqual(KeyAccess, ejsonpath_common:keyaccess([{keyaccess, KeyAccess}])),
+    ?assertEqual(fun ejsonpath_common:identity/1, ejsonpath_common:keyaccess([])),
+
+    ok.

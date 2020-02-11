@@ -241,3 +241,62 @@ delete_test() ->
 
     ok.
 
+
+key_access_atom_test() ->
+    O = #{
+        items => [
+            #{id => 0, value => yyy},
+            #{id => 1, value => yyy}
+        ]
+    },
+    KeyAccess = fun (X) -> erlang:binary_to_atom(X, utf8) end,
+    Opts = [{keyaccess, KeyAccess}],
+
+    ?assertEqual(
+        { #{
+            items => [
+                #{id => 0, value => xxx},
+                #{id => 1, value => xxx}
+            ]
+        },
+            ["$['items'][0]['value']","$['items'][1]['value']"]
+        },
+        ejsonpath_transform:transform(?ast("$.items.*.value"), O, fun (_) -> {ok, xxx} end, #{}, Opts)),
+
+    ?assertEqual(
+        { #{
+            items => [
+                #{id => 1, value => yyy}
+            ]
+        },
+            ["$['items'][0]"]
+        },
+        ejsonpath_transform:transform(?ast("$.items[?(@.id == 0)]"), O, fun (_) -> delete end, #{}, Opts)),
+
+    ?assertError(not_found,
+        ejsonpath_transform:transform(?ast("$.items[?(@.id == 0)].name"), O, fun (_) -> delete end, #{},[Opts])),
+
+    ?assertEqual(
+        { #{
+            items => [
+                #{id => 0, value => yyy},
+                #{id => 1, value => yyy}
+            ]
+        }, ["$['items'][0]['name']"] },
+        ejsonpath_transform:transform(?ast("$.items[?(@.id == 0)].name"), O, fun (_) -> delete end, #{},[handle_not_found|Opts])),
+
+    ?assertEqual(
+        { #{
+            items => [
+                #{id => 0, value => yyy, name => <<"erlang-rocks">>},
+                #{id => 1, value => yyy}
+            ]
+        }, ["$['items'][0]['name']"] },
+        ejsonpath_transform:transform(?ast("$.items[?(@.id == 0)].name"), O,
+            fun ({not_found, "$['items'][0]['name']", name = Key, #{ node := Node, type := hash}}) ->
+                {ok, maps:put(Key, <<"erlang-rocks">>, Node)}
+            end,
+            #{},
+            [handle_not_found|Opts])),
+
+    ok.

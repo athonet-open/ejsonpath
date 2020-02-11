@@ -15,8 +15,11 @@
 ).
 
 get_doc() ->
+    get_doc([]).
+
+get_doc(JsxOptions) ->
     {ok, Bin} = file:read_file("./test/doc.json"),
-    jsx:decode(Bin, [return_maps]).
+    jsx:decode(Bin, [return_maps|JsxOptions]).
 
 root_test() ->
     O1 = #{},
@@ -213,4 +216,27 @@ transform_expr_test() ->
             mul => fun ({N, _}, [M]) -> N * M end
         }, [])),
 
+    ok.
+
+
+key_access_atom_test() ->
+    ?assertEqual(
+        { [0,1,2,3],
+            [
+                "$['store']['book'][0]['id']",
+                "$['store']['book'][1]['id']",
+                "$['store']['book'][2]['id']",
+                "$['store']['book'][3]['id']"]
+        },
+        ejsonpath_eval:eval(?ast("$..book..id"), get_doc([{labels, atom}]), #{}, [
+            {keyaccess, fun (X) -> binary_to_atom(X, utf8) end}
+        ])),
+
+    ?assertEqual({[12.99,8.99,22.99],
+        ["$['store']['book'][1]['price']",
+            "$['store']['book'][2]['price']",
+            "$['store']['book'][3]['price']"]},
+        ejsonpath_eval:eval(?ast("$.store.book[?(@.category == 'fiction')].price"), get_doc([{labels, atom}]), #{}, [
+            {keyaccess, fun (X) -> binary_to_atom(X, utf8) end}
+        ])),
     ok.
