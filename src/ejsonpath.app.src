@@ -2,7 +2,7 @@
 {application, ejsonpath,
  [
   {description, "JSONPath for erlang"},
-  {vsn, "0.2.3"},
+  {vsn, "0.2.4"},
   {registered, []},
   {applications, [
                   kernel,

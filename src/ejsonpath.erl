@@ -36,7 +36,7 @@
     | binary()                     % string
     | number()                     % int/float
     | [json_node()]                % array
-    | #{binary() => json_node()}.  % hash (object)
+    | #{binary() | atom() => json_node()}.  % hash (object)
 
 -type jsonpath_funcspecs() :: #{ Name :: atom() => Fun :: jsonpath_func() }.
 
